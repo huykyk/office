@@ -345,18 +345,30 @@ RT_RESULT rt_controller(OPTSCHCURVE current_opt_result, RT_INPUT rt_in,
 		last_limit = current_opt_result.limit_v;
 	}
 
-	//减少档位抖动
+	//计划在这加进入限速区的判断
+	if(   (当前档位>0 && 当前档位 < 预瞄点1的档位 && 预瞄点2位于限速区 && 道路类型不是缓坡和上坡)
+		  ||  
+		 (当前档位>0 && 预瞄点1位于限速区 && 预瞄点2位于限速区 && 道路类型不是缓坡和上坡)
+	  )
+	{
+		gear = last_gear;
+	}
+
+
+	//减少档位抖动 
 	if (ahead_opt_result.gear >= last_gear && gear < last_gear && (state_flag == 1 && (ahead_opt_result.limit_v < current_opt_result.limit_v))
 			&& road_type != split_type_flag && very_close_to_limit_flag == 0
 			&& over_speed_flag == 0) {
 		gear = last_gear;
 	}
-	if ((ahead_opt_result.gear <= last_gear + 5 && ahead_opt_result.gear >= last_gear - 10) && (gear < last_gear && gear < ahead_opt_result.gear) && road_type != split_type_flag && very_close_to_limit_flag == 0
+	if ((ahead_opt_result.gear <= last_gear + 5 && ahead_opt_result.gear >= last_gear - 10) &&
+	 (gear < last_gear && gear < ahead_opt_result.gear) && road_type != split_type_flag && very_close_to_limit_flag == 0
 			&& over_speed_flag == 0) {
 		gear = ahead_opt_result.gear;
 	}
 	if (ahead_opt_result.gear <= last_gear && gear > last_gear
-			&& (rt_v > current_opt_result.limit_v - 12 || current_opt_result.con_tel_kp - mark_last_limit_change_post < 30) && power_short_flag == 0
+			&& (rt_v > current_opt_result.limit_v - 12 || current_opt_result.con_tel_kp - mark_last_limit_change_post < 30) 
+			&& power_short_flag == 0
 			&& road_type != split_type_flag ) {
 		gear = last_gear;
 	}
@@ -364,6 +376,8 @@ RT_RESULT rt_controller(OPTSCHCURVE current_opt_result, RT_INPUT rt_in,
 			&& road_type != split_type_flag) {
 		gear = ahead_opt_result.gear;
 	}
+
+
 
 	//标记负档位变化超过10的点，并用于约束负档位每个档位持续工作距离不要小于200米
 	if (gear < 0){
